@@ -48,6 +48,31 @@
         .input-void:focus { border-bottom-color: var(--gold); }
         .input-void::placeholder { color: #333; font-weight: 200; }
 
+        .input-edit {
+            background: transparent;
+            border: 1px dashed transparent;
+            color: #d1d5db;
+            text-align: center;
+            outline: none;
+            width: 100%;
+            font-family: 'Noto Serif SC', serif;
+            font-style: italic;
+        }
+        .input-edit:hover, .input-edit:focus { border-bottom-color: #333; }
+
+        .textarea-feedback {
+            background: #0f0f0f;
+            border: 1px solid #222;
+            color: #888;
+            font-size: 0.75rem;
+            line-height: 1.5;
+            width: 100%;
+            resize: none;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .textarea-feedback:focus { border-color: var(--gold); color: #ccc; }
+
         .btn-spirit {
             border: 1px solid #333;
             color: #666;
@@ -62,7 +87,6 @@
             background: rgba(212, 175, 55, 0.05);
         }
 
-        /* 卦象绘制 */
         .gua-col { display: flex; flex-direction: column; align-items: center; margin: 0 8px; position: relative; }
         .gua-grid { display: flex; flex-direction: column; width: 60px; gap: 6px; }
         @media (min-width: 768px) { .gua-col { margin: 0 16px; } .gua-grid { width: 72px; gap: 8px; } }
@@ -86,7 +110,6 @@
             border-radius: 50%; box-shadow: 0 0 8px var(--red);
         }
 
-        /* 动画类 */
         .fade-in-up { animation: fadeInUp 1s ease forwards; opacity: 0; transform: translateY(20px); }
         .fade-out { animation: fadeOut 0.8s ease forwards; pointer-events: none; }
         @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
@@ -105,15 +128,13 @@
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
 
-    <!-- 顶部 LOGO -->
     <header id="main-header" class="fixed top-8 left-0 right-0 text-center z-50 transition-all duration-700">
         <h1 class="text-2xl font-light tracking-[0.8em] text-[#d4af37] opacity-80 cursor-pointer" onclick="resetApp()">乾 元</h1>
     </header>
 
-    <!-- 主容器 -->
     <main class="w-full max-w-6xl relative flex items-center justify-center min-h-[600px]">
 
-        <!-- 场景1：输入界面 -->
+        <!-- 输入界面 -->
         <div id="scene-input" class="w-full max-w-lg text-center transition-all duration-700 space-y-10 md:space-y-12">
             <div class="space-y-2 opacity-60 mt-12 md:mt-0">
                 <p class="text-xs tracking-[0.2em] font-light">一物从来有一身</p>
@@ -149,7 +170,6 @@
                 感 应
             </button>
             
-            <!-- 底部工具栏 -->
             <div class="pt-8 md:pt-12 flex flex-wrap justify-center gap-4 md:gap-6 text-[10px] text-gray-700 items-center">
                 <span onclick="toggleTool('xiaoliuren')" class="cursor-pointer hover:text-gray-400 p-2">小六壬</span>
                 <span class="opacity-30 hidden md:inline">|</span>
@@ -165,7 +185,7 @@
             </div>
         </div>
 
-        <!-- 场景2：结果界面 -->
+        <!-- 结果界面 -->
         <div id="scene-result" class="hidden w-full fade-in-up flex flex-col items-center">
             
             <div id="capture-area" class="w-full max-w-5xl bg-[#050505] p-6 md:p-12 rounded-xl">
@@ -177,9 +197,12 @@
                     
                     <!-- 左侧：卦象 -->
                     <div id="visual-col" class="flex flex-col items-center border-[#222] md:border-r md:pr-10 border-b md:border-b-0 pb-10 md:pb-0 w-full">
+                        <!-- 时间与核心数字显示 -->
                         <div class="text-center mb-8 md:mb-10 space-y-1">
                             <div class="text-gray-500 text-xs font-mono" id="res-gregorian"></div>
                             <div class="text-[#8a7018] text-sm font-bold tracking-widest" id="res-lunar"></div>
+                            <!-- 新增：核心数字显示 -->
+                            <div class="text-gray-600 text-[10px] font-mono mt-1 tracking-widest" id="res-nums"></div>
                         </div>
 
                         <div class="flex items-end justify-center space-x-2 md:space-x-8">
@@ -206,8 +229,13 @@
                             </div>
                         </div>
                         
-                        <div class="mt-8 md:mt-10 text-center px-2">
-                            <div class="text-gray-300 text-base font-serif italic break-words" id="res-question"></div>
+                        <div class="mt-8 md:mt-10 text-center px-2 w-full">
+                            <input type="text" id="res-question" class="input-edit text-base md:text-lg" placeholder="点击此处修改问题..." onchange="markUnsaved()">
+                        </div>
+
+                        <div class="mt-6 w-full px-4">
+                            <label class="text-[10px] text-[#d4af37] opacity-60 block mb-1">📝 笔记 / 反馈 (可编辑)</label>
+                            <textarea id="res-feedback" class="textarea-feedback h-24 p-2 rounded" placeholder="在此记录结果反馈、断语或后续应验情况..." onchange="markUnsaved()"></textarea>
                         </div>
                     </div>
 
@@ -220,10 +248,12 @@
                         </h3>
                         <div id="analysis-text" class="text-sm font-light leading-7 md:leading-8 text-gray-300 space-y-4 text-justify px-2 md:px-0"></div>
                         
-                        <!-- AI 问策按钮 -->
-                        <div class="mt-8 text-center md:text-left">
-                            <button onclick="copyToAI()" class="text-[10px] border border-[#333] hover:border-[#d4af37] text-gray-500 hover:text-[#d4af37] px-4 py-2 rounded transition-colors flex items-center justify-center md:justify-start mx-auto md:mx-0 gap-2">
+                        <div class="mt-8 text-center md:text-left flex flex-col gap-3">
+                            <button onclick="copyToAI()" class="text-[10px] border border-[#333] hover:border-[#d4af37] text-gray-500 hover:text-[#d4af37] px-4 py-2 rounded transition-colors flex items-center justify-center md:justify-start mx-auto md:mx-0 gap-2 w-full md:w-auto">
                                 <span>✨</span> 复制给 AI 深度解卦
+                            </button>
+                            <button onclick="updateCurrentRecord()" id="btn-update-record" class="text-[10px] border border-[#333] hover:border-[#d4af37] text-gray-500 hover:text-[#d4af37] px-4 py-2 rounded transition-colors flex items-center justify-center md:justify-start mx-auto md:mx-0 gap-2 w-full md:w-auto">
+                                <span>💾</span> 更新记录 (保存修改)
                             </button>
                         </div>
                     </div>
@@ -234,18 +264,15 @@
                 </div>
             </div>
 
-            <!-- 操作按钮区 -->
             <div class="mt-8 flex space-x-6 pb-8">
                 <button onclick="resetApp()" class="btn-spirit px-6 py-2 text-xs rounded-full">再占一卦</button>
                 <button onclick="capture()" class="btn-spirit px-6 py-2 text-xs rounded-full flex items-center bg-[#d4af37] text-black border-[#d4af37] hover:bg-[#b5952f] hover:text-black">
-                    <span class="mr-2">❖</span> 保存卦象
+                    <span class="mr-2">❖</span> 保存卦象 (截图)
                 </button>
             </div>
         </div>
         
         <!-- 工具弹窗 -->
-        
-        <!-- 小六壬 -->
         <div id="modal-xiaoliuren" class="fixed inset-0 bg-black/95 z-40 hidden flex items-center justify-center backdrop-blur-sm px-4">
             <div class="modal-content relative">
                 <button onclick="toggleTool('xiaoliuren')" class="absolute top-4 right-4 text-gray-600 hover:text-white p-2">✕</button>
@@ -267,7 +294,6 @@
             </div>
         </div>
 
-        <!-- 贡献 -->
         <div id="modal-contrib" class="fixed inset-0 bg-black/95 z-40 hidden flex items-center justify-center backdrop-blur-sm px-4">
             <div class="modal-content relative text-center">
                 <button onclick="toggleTool('contrib')" class="absolute top-4 right-4 text-gray-600 hover:text-white p-2">✕</button>
@@ -281,11 +307,11 @@
                     <p>· 64卦名显示 (Done)</p>
                     <p>· 旺相休囚死逻辑 (Done)</p>
                     <p>· AI 问策接口 (Done)</p>
+                    <p>· 记录编辑与反馈 (Done)</p>
                 </div>
             </div>
         </div>
 
-        <!-- 卦例 -->
         <div id="modal-cases" class="fixed inset-0 bg-black/95 z-40 hidden flex items-center justify-center backdrop-blur-sm px-4">
             <div class="modal-content relative">
                 <button onclick="toggleTool('cases')" class="absolute top-4 right-4 text-gray-600 hover:text-white p-2">✕</button>
@@ -298,12 +324,11 @@
                     <p id="c-time" class="text-[#8a7018] text-xs mb-2"></p>
                     <p id="c-qs" class="font-bold mb-4 text-white"></p>
                     <p id="c-fk" class="opacity-80 italic"></p>
-                    <button onclick="caseToDivination()" class="mt-4 text-[10px] text-[#d4af37] underline block w-full text-right">排盘查看 (不记录)</button>
+                    <button onclick="caseToDivination()" class="mt-4 text-[10px] text-[#d4af37] underline block w-full text-right">排盘查看</button>
                 </div>
             </div>
         </div>
 
-        <!-- 历史记录 -->
         <div id="modal-history" class="fixed inset-0 bg-black/95 z-40 hidden flex items-center justify-center backdrop-blur-sm px-4">
             <div class="modal-content relative max-h-[70vh] flex flex-col">
                 <button onclick="toggleTool('history')" class="absolute top-4 right-4 text-gray-600 hover:text-white p-2">✕</button>
@@ -318,51 +343,24 @@
     </main>
 
     <script>
-        // --- 64卦名数据 ---
         const GUA_64 = {
-            "乾乾": "乾为天", "坤坤": "坤为地", "兑兑": "兑为泽", "离离": "离为火", 
-            "震震": "震为雷", "巽巽": "巽为风", "坎坎": "坎为水", "艮艮": "艮为山",
-            "乾坎": "天水讼", "乾离": "天火同人", "乾震": "天雷无妄", "乾巽": "天风姤", 
-            "乾艮": "天山遁", "乾兑": "天泽履", "乾坤": "天地否", "兑坎": "泽水困", 
-            "兑艮": "泽山咸", "兑离": "泽火革", "兑乾": "泽天夬", "兑巽": "泽风大过", 
-            "兑震": "泽雷随", "兑坤": "泽地萃", "离乾": "火天大有", "离坤": "火地晋", 
-            "离巽": "火风鼎", "离艮": "火山旅", "离坎": "火水未济", "离兑": "火泽睽", 
-            "离震": "火雷噬嗑", "震乾": "雷天大壮", "震坤": "雷地豫", "震兑": "雷泽归妹", 
-            "震离": "雷火丰", "震巽": "雷风恒", "震艮": "雷山小过", "震坎": "雷水解", 
-            "巽乾": "风天小畜", "巽坤": "风地观", "巽兑": "风泽中孚", "巽离": "风火家人", 
-            "巽震": "风雷益", "巽坎": "风水涣", "巽艮": "风山渐", "坎乾": "水天需", 
-            "坎坤": "水地比", "坎兑": "水泽节", "坎离": "水火既济", "坎震": "水雷屯", 
-            "坎巽": "水风井", "坎艮": "水山蹇", "艮震": "山雷颐", "艮巽": "山风蛊", 
-            "艮乾": "山天大畜", "艮坤": "山地剥", "艮兑": "山泽损", "艮离": "山火贲", 
-            "艮坎": "山水蒙", "坤离": "地火明夷", "坤坎": "地水师", "坤兑": "地泽临", 
-            "坤巽": "地风升", "坤震": "地雷复", "坤艮": "地山谦", "坤乾": "地天泰"
+            "乾乾": "乾为天", "坤坤": "坤为地", "兑兑": "兑为泽", "离离": "离为火", "震震": "震为雷", "巽巽": "巽为风", "坎坎": "坎为水", "艮艮": "艮为山",
+            "乾坎": "天水讼", "乾离": "天火同人", "乾震": "天雷无妄", "乾巽": "天风姤", "乾艮": "天山遁", "乾兑": "天泽履", "乾坤": "天地否", "兑坎": "泽水困", 
+            "兑艮": "泽山咸", "兑离": "泽火革", "兑乾": "泽天夬", "兑巽": "泽风大过", "兑震": "泽雷随", "兑坤": "泽地萃", "离乾": "火天大有", "离坤": "火地晋", 
+            "离巽": "火风鼎", "离艮": "火山旅", "离坎": "火水未济", "离兑": "火泽睽", "离震": "火雷噬嗑", "震乾": "雷天大壮", "震坤": "雷地豫", "震兑": "雷泽归妹", 
+            "震离": "雷火丰", "震巽": "雷风恒", "震艮": "雷山小过", "震坎": "雷水解", "巽乾": "风天小畜", "巽坤": "风地观", "巽兑": "风泽中孚", "巽离": "风火家人", 
+            "巽震": "风雷益", "巽坎": "风水涣", "巽艮": "风山渐", "坎乾": "水天需", "坎坤": "水地比", "坎兑": "水泽节", "坎离": "水火既济", "坎震": "水雷屯", 
+            "坎巽": "水风井", "坎艮": "水山蹇", "艮震": "山雷颐", "艮巽": "山风蛊", "艮乾": "山天大畜", "艮坤": "山地剥", "艮兑": "山泽损", "艮离": "山火贲", 
+            "艮坎": "山水蒙", "坤离": "地火明夷", "坤坎": "地水师", "坤兑": "地泽临", "坤巽": "地风升", "坤震": "地雷复", "坤艮": "地山谦", "坤乾": "地天泰"
         };
-
-        const GUA = {
-            '111': { n: "乾", w: "金" }, '011': { n: "兑", w: "金" },
-            '101': { n: "离", w: "火" }, '001': { n: "震", w: "木" },
-            '110': { n: "巽", w: "木" }, '010': { n: "坎", w: "水" },
-            '100': { n: "艮", w: "土" }, '000': { n: "坤", w: "土" }
-        };
+        const GUA = { '111': { n: "乾", w: "金" }, '011': { n: "兑", w: "金" }, '101': { n: "离", w: "火" }, '001': { n: "震", w: "木" }, '110': { n: "巽", w: "木" }, '010': { n: "坎", w: "水" }, '100': { n: "艮", w: "土" }, '000': { n: "坤", w: "土" } };
         const XT_SEQ = ['111', '011', '101', '001', '110', '010', '100', '000']; 
-        // 确保地支数组正确
         const DZ = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
         const WX = ["金","水","木","火","土"];
-        
-        const COLOR_MAP = {
-            "金": "color-jin", "木": "color-mu", "水": "color-shui", "火": "color-huo", "土": "color-tu"
-        };
+        const COLOR_MAP = { "金": "color-jin", "木": "color-mu", "水": "color-shui", "火": "color-huo", "土": "color-tu" };
 
-        let appState = { 
-            mode: 'time', 
-            colorMode: localStorage.getItem('qy_color_mode') || 'gold',
-            lastResult: null
-        };
-
-        const caseDB = [
-            {t:"辰年 十二月十七日 申时", q:"观梅占", g:[30,39,39], f:"见二雀争枝坠地。预言：明晚当有女子折花，园丁不知而逐之，女子失惊坠地，逐伤其股。后果如验。"},
-            {t:"冬月 十七日 酉时", q:"扣门借物", g:[1,6,6], f:"闻扣门声，初一声，止，继而又五声。且云借物。断曰：借斧。果借斧。"}
-        ];
+        let appState = { mode: 'time', colorMode: localStorage.getItem('qy_color_mode') || 'gold', currentRecordId: null, currentNums: null };
+        const caseDB = [ {t:"辰年 十二月十七日 申时", q:"观梅占", g:[30,39,39], f:"见二雀争枝坠地。预言：明晚当有女子折花，园丁不知而逐之，女子失惊坠地，逐伤其股。后果如验。"}, {t:"冬月 十七日 酉时", q:"扣门借物", g:[1,6,6], f:"闻扣门声，初一声，止，继而又五声。且云借物。断曰：借斧。果借斧。"} ];
 
         window.onload = () => {
             const now = new Date();
@@ -371,102 +369,81 @@
             updateColorBtnText();
         };
 
-        // --- 核心逻辑 ---
         function calculate(a, b, c) {
             if (a === 0) a = 8; if (b === 0) b = 8; if (c === 0) c = 6;
-            let idxA = (a % 8 === 0) ? 7 : (a % 8) - 1;
-            let idxB = (b % 8 === 0) ? 7 : (b % 8) - 1;
-            let mv = (c % 6 === 0) ? 6 : (c % 6);
-            let zT = XT_SEQ[idxA], zB = XT_SEQ[idxB];
-            let hT = zT[1] + zT[2] + zB[0], hB = zT[2] + zB[0] + zB[1];
-            let full = (zT + zB).split('');
-            let flipIdx = 6 - mv;
-            full[flipIdx] = full[flipIdx] === '1' ? '0' : '1';
+            let idxA = (a % 8 === 0) ? 7 : (a % 8) - 1; let idxB = (b % 8 === 0) ? 7 : (b % 8) - 1; let mv = (c % 6 === 0) ? 6 : (c % 6);
+            let zT = XT_SEQ[idxA], zB = XT_SEQ[idxB]; let hT = zT[1] + zT[2] + zB[0], hB = zT[2] + zB[0] + zB[1];
+            let full = (zT + zB).split(''); let flipIdx = 6 - mv; full[flipIdx] = full[flipIdx] === '1' ? '0' : '1';
             return { z: [zT, zB], h: [hT, hB], b: [full.slice(0,3).join(''), full.slice(3,6).join('')], mv: mv };
         }
 
         function drawGua(id, top, bot, moveLine = -1) {
-            const el = document.getElementById(id);
-            el.innerHTML = ''; el.className = 'gua-grid';
-            const topW = GUA[top].w; const botW = GUA[bot].w;
-            const bits = top + bot;
+            const el = document.getElementById(id); el.innerHTML = ''; el.className = 'gua-grid';
+            const topW = GUA[top].w; const botW = GUA[bot].w; const bits = top + bot;
             for (let i = 0; i < 6; i++) {
-                const isYang = bits[i] === '1';
-                const row = document.createElement('div');
-                row.className = `gua-row ${isYang ? 'yang-line' : 'yin-line'}`;
-                let colorClass = '';
-                if (appState.colorMode === 'wuxing') {
-                    colorClass = (i < 3) ? COLOR_MAP[topW] : COLOR_MAP[botW];
-                }
-                const createBar = () => {
-                    const b = document.createElement('div'); b.className = 'bar ' + colorClass; return b;
-                }
-                if (isYang) row.appendChild(createBar());
-                else { row.appendChild(createBar()); row.appendChild(createBar()); }
-                if (moveLine !== -1 && i === (6 - moveLine)) {
-                    const dot = document.createElement('div'); dot.className = 'moving-dot'; row.appendChild(dot);
-                }
+                const isYang = bits[i] === '1'; const row = document.createElement('div'); row.className = `gua-row ${isYang ? 'yang-line' : 'yin-line'}`;
+                let colorClass = ''; if (appState.colorMode === 'wuxing') { colorClass = (i < 3) ? COLOR_MAP[topW] : COLOR_MAP[botW]; }
+                const createBar = () => { const b = document.createElement('div'); b.className = 'bar ' + colorClass; return b; }
+                if (isYang) row.appendChild(createBar()); else { row.appendChild(createBar()); row.appendChild(createBar()); }
+                if (moveLine !== -1 && i === (6 - moveLine)) { const dot = document.createElement('div'); dot.className = 'moving-dot'; row.appendChild(dot); }
                 el.appendChild(row);
             }
         }
 
-        function divine(saveToHistory = true) {
+        // 核心起卦函数：divine
+        // existingTime: 当加载历史记录时，传入当时的 timestamp，用于显示当时的时间
+        function divine(saveToHistory = true, existingId = null, feedbackVal = "", existingTime = null) {
             let a, b, c, gregStr, lunarStr, monthIdx;
-            const qs = document.getElementById('inp-question').value || "无问自占";
+            let qs = document.getElementById('inp-question').value || "无问自占";
 
-            if (appState.mode === 'random') {
-                a = Math.floor(Math.random()*64)+1; b = Math.floor(Math.random()*64)+1; c = Math.floor(Math.random()*6)+1;
-                gregStr = "随机起卦"; lunarStr = "灵机一动"; monthIdx = new Date().getMonth(); 
-            } else if (appState.mode === 'number') {
+            // 1. 确定起卦参数
+            if (appState.mode === 'number' || existingId) {
+                // 历史记录或数字模式
                 a = +document.getElementById('n1').value; b = +document.getElementById('n2').value; c = +document.getElementById('n3').value;
-                if (!a||!b||!c) return alert("请填写完整数字");
-                gregStr = "数字起卦"; lunarStr = `[${a}, ${b}, ${c}]`; monthIdx = new Date().getMonth();
-            } else {
-                // Time Mode Logic - Strictly matching provided Python code
+                // 如果有 existingTime，使用它来显示时间；否则使用当前时间
+                const timeBase = existingTime ? new Date(existingTime) : new Date();
+                const l = Lunar.fromDate(timeBase);
+                const yI = DZ.indexOf(l.getYearZhi()) + 1; // 仅作为显示用
+                const h = timeBase.getHours();
+                
+                gregStr = `公历: ${timeBase.getFullYear()}.${timeBase.getMonth()+1}.${timeBase.getDate()} ${timeBase.getHours()}:${String(timeBase.getMinutes()).padStart(2,'0')}`;
+                let hourChar = (h >= 23 || h < 1) ? "子" : DZ[Math.floor((h + 1) / 2) % 12];
+                lunarStr = `农历: ${l.getYearInGanZhi()}年 ${l.getMonthInChinese()}月${l.getDayInChinese()} ${hourChar}时`;
+                monthIdx = l.getMonth() - 1; // 农历月
+                
+            } else if (appState.mode === 'random') {
+                a = Math.floor(Math.random()*64)+1; b = Math.floor(Math.random()*64)+1; c = Math.floor(Math.random()*6)+1;
+                const now = new Date(); const l = Lunar.fromDate(now);
+                gregStr = `公历: ${now.getFullYear()}.${now.getMonth()+1}.${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+                lunarStr = `农历: ${l.getYearInGanZhi()}年 ${l.getMonthInChinese()}月${l.getDayInChinese()} ${DZ[Math.floor((now.getHours()+1)/2)%12]}时`;
+                monthIdx = now.getMonth(); 
+            } else { // time
                 const d = new Date(document.getElementById('inp-time').value);
                 const l = Lunar.fromDate(d);
-                
-                // Python: year_gz = di_zhi[time_[1]] -> Index of Year Branch
-                const yI = DZ.indexOf(l.getYearZhi()) + 1;
-                
-                // Python: yue = ...month
-                const m = l.getMonth(); 
-                
-                // Python: ri = ...day
-                const day = l.getDay();
-                
-                let h = d.getHours();
-                // Python: shi = (time2 + 1) // 2 + 1
-                let hI = Math.floor((h + 1) / 2) + 1;
-                
-                // Python: a = year_gz + yue + ri
-                a = yI + m + day; 
-                // Python: b = year_gz + yue + ri + shi
-                b = a + hI; 
-                // Python: c = b
-                c = b;
-                
-                // Display Strings
+                const yI = DZ.indexOf(l.getYearZhi()) + 1; const m = l.getMonth(); const day = l.getDay();
+                let h = d.getHours(); let hI = Math.floor((h + 1) / 2) + 1;
+                a = yI + m + day; b = a + hI; c = b;
                 gregStr = `公历: ${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
-                
-                // Get Hour Branch Char for display. Python: if 23<=t or t<1 return zi.
-                let hourChar = "";
-                if (h >= 23 || h < 1) hourChar = "子";
-                else hourChar = DZ[Math.floor((h + 1) / 2) % 12]; // Just for display mapping
-                
+                let hourChar = (h >= 23 || h < 1) ? "子" : DZ[Math.floor((h + 1) / 2) % 12];
                 lunarStr = `农历: ${l.getYearInGanZhi()}年 ${l.getMonthInChinese()}月${l.getDayInChinese()} ${hourChar}时`;
                 monthIdx = m - 1; 
             }
 
+            if (!a || !b || !c) { if(!existingId) return alert("数据错误"); }
+
             const res = calculate(a, b, c);
-            appState.lastResult = { nums: [a, b, c], qs: qs, saved: false, greg: gregStr, lunar: lunarStr, res: res, monthIdx: monthIdx };
-
-            if (saveToHistory && qs !== "无问自占") {
-                saveHistory([a, b, c], qs);
-                appState.lastResult.saved = true;
+            
+            if (existingId) {
+                appState.currentRecordId = existingId;
+            } else if (saveToHistory && qs !== "无问自占") {
+                const newId = Date.now();
+                saveHistory({ t: newId, n: [a, b, c], q: qs, fb: "" }); 
+                appState.currentRecordId = newId;
+            } else {
+                appState.currentRecordId = Date.now(); 
             }
+            appState.currentNums = [a, b, c];
 
-            // UI transition (No animation)
             document.getElementById('main-header').style.opacity = '0';
             document.getElementById('main-header').style.pointerEvents = 'none';
             const inputScene = document.getElementById('scene-input');
@@ -479,19 +456,17 @@
 
             document.getElementById('res-gregorian').innerText = gregStr;
             document.getElementById('res-lunar').innerText = lunarStr;
-            document.getElementById('res-question').innerText = `"${qs}"`;
+            document.getElementById('res-nums').innerText = `[${a}, ${b}, ${c}]`; // 显示三个数字
+            document.getElementById('res-question').value = qs;
+            document.getElementById('res-feedback').value = feedbackVal;
 
-            // 64卦名
             const getName = (t, b) => GUA_64[GUA[t].n + GUA[b].n] || "未知";
-            
             document.getElementById('fullname-zhu').innerText = getName(res.z[0], res.z[1]);
             document.getElementById('name-zhu').innerText = GUA[res.z[0]].n + GUA[res.z[1]].n;
             drawGua('viz-zhu', res.z[0], res.z[1], res.mv);
-
             document.getElementById('fullname-hu').innerText = getName(res.h[0], res.h[1]);
             document.getElementById('name-hu').innerText = GUA[res.h[0]].n + GUA[res.h[1]].n;
             drawGua('viz-hu', res.h[0], res.h[1]);
-
             document.getElementById('fullname-bian').innerText = getName(res.b[0], res.b[1]);
             document.getElementById('name-bian').innerText = GUA[res.b[0]].n + GUA[res.b[1]].n;
             drawGua('viz-bian', res.b[0], res.b[1]);
@@ -499,58 +474,28 @@
             analyzeLogic(res, monthIdx);
         }
 
-        // --- 旺衰与断卦 ---
         function getSeasonState(wuxing, month) {
-            const m = month + 1;
-            let season = "";
-            if([1,2].includes(m)) season = "木";
-            else if([4,5].includes(m)) season = "火";
-            else if([7,8].includes(m)) season = "金";
-            else if([10,11].includes(m)) season = "水";
-            else season = "土";
-            
-            if(wuxing === season) return "旺 (得令)";
-            return wuxing === season ? "旺" : "衰";
+            const m = month + 1; let season = "";
+            if([1,2].includes(m)) season = "木"; else if([4,5].includes(m)) season = "火"; else if([7,8].includes(m)) season = "金"; else if([10,11].includes(m)) season = "水"; else season = "土";
+            if(wuxing === season) return "旺 (得令)"; return wuxing === season ? "旺" : "衰";
         }
 
         function analyzeLogic(res, monthIdx) {
             const getRel = (t, y) => {
                 const ti = WX.indexOf(t), yi = WX.indexOf(y);
                 const n = (i, off) => WX[(i+off)%5];
-                if (n(ti,1)===y) return {s:2, t:"体生用·泄气"}; 
-                if (n(ti,2)===y) return {s:3, t:"体克用·进财"}; 
-                if (n(ti,3)===y) return {s:1, t:"用克体·受制"}; 
-                if (n(ti,4)===y) return {s:4, t:"用生体·得助"}; 
-                return {s:3, t:"比和·顺遂"};
+                if (n(ti,1)===y) return {s:2, t:"体生用·泄气"}; if (n(ti,2)===y) return {s:3, t:"体克用·进财"}; if (n(ti,3)===y) return {s:1, t:"用克体·受制"}; if (n(ti,4)===y) return {s:4, t:"用生体·得助"}; return {s:3, t:"比和·顺遂"};
             };
-
             let tiG, yongG;
-            if (res.mv <= 3) { tiG = res.z[0]; yongG = res.z[1]; } 
-            else { tiG = res.z[1]; yongG = res.z[0]; }
-
-            const tiW = GUA[tiG].w;
-            const zhuYongW = GUA[yongG].w;
+            if (res.mv <= 3) { tiG = res.z[0]; yongG = res.z[1]; } else { tiG = res.z[1]; yongG = res.z[0]; }
+            const tiW = GUA[tiG].w; const zhuYongW = GUA[yongG].w;
             const seasonState = getSeasonState(tiW, monthIdx);
-
-            appState.lastResult.tiW = tiW;
-            appState.lastResult.yongW = zhuYongW;
-            appState.lastResult.seasonState = seasonState;
-            
+            window.lastAiData = { tiW, yongW: zhuYongW, seasonState, res, qs: document.getElementById('res-question').value };
             let huTiW, huYongW, bianTiW, bianYongW;
-            if (res.mv <= 3) { 
-                huTiW = GUA[res.h[0]].w; huYongW = GUA[res.h[1]].w;
-                bianTiW = GUA[res.b[0]].w; bianYongW = GUA[res.b[1]].w;
-            } else {
-                huTiW = GUA[res.h[1]].w; huYongW = GUA[res.h[0]].w;
-                bianTiW = GUA[res.b[1]].w; bianYongW = GUA[res.b[0]].w;
-            }
-
-            const r1 = getRel(tiW, zhuYongW);
-            const r2 = getRel(huTiW, huYongW);
-            const r3 = getRel(bianTiW, bianYongW);
-            
-            appState.lastResult.rels = [r1, r2, r3];
-
+            if (res.mv <= 3) { huTiW = GUA[res.h[0]].w; huYongW = GUA[res.h[1]].w; bianTiW = GUA[res.b[0]].w; bianYongW = GUA[res.b[1]].w; } 
+            else { huTiW = GUA[res.h[1]].w; huYongW = GUA[res.h[0]].w; bianTiW = GUA[res.b[1]].w; bianYongW = GUA[res.b[0]].w; }
+            const r1 = getRel(tiW, zhuYongW); const r2 = getRel(huTiW, huYongW); const r3 = getRel(bianTiW, bianYongW);
+            window.lastAiData.rels = [r1, r2, r3];
             let html = `
                 <div class="border-l-2 border-[#d4af37] pl-4 mb-6">
                     <p>体卦 <span class="mark-gold font-bold text-lg">${tiW}</span> (${seasonState})</p>
@@ -563,11 +508,7 @@
                 </div>
                 <div class="space-y-4 font-normal text-gray-300">
             `;
-
-            if (r1.s > r3.s) html += `<p class="mark-bad">⚠️ 变比主凶，事多阻碍。</p>`;
-            else if (r1.s < r3.s) html += `<p class="mark-good">✅ 变比主吉，渐入佳境。</p>`;
-            else html += `<p class="mark-gold">⚖️ 吉凶无大变，平稳发展。</p>`;
-
+            if (r1.s > r3.s) html += `<p class="mark-bad">⚠️ 变比主凶，事多阻碍。</p>`; else if (r1.s < r3.s) html += `<p class="mark-good">✅ 变比主吉，渐入佳境。</p>`; else html += `<p class="mark-gold">⚖️ 吉凶无大变，平稳发展。</p>`;
             const trend = (s1, s2) => s2 > s1 ? "上升" : (s2 < s1 ? "下滑" : "平稳");
             html += `<p class="text-xs text-gray-500 leading-6">事情初始${r1.s<=2?'较为艰难':'较为顺利'}，过程中运势${trend(r1.s,r2.s)}，最终结局${r3.s>r2.s?'优于':'不如'}过程。</p>`;
             if (Math.abs(r1.s - r3.s) > 2) html += `<p class="text-xs text-[#d4af37] mt-2">注：卦象变化剧烈。</p>`;
@@ -575,49 +516,23 @@
             document.getElementById('analysis-text').innerHTML = html;
         }
 
-        // --- AI 复制 ---
-        function copyToAI() {
-            const d = appState.lastResult;
-            if(!d) return;
-            const prompt = `我用梅花易数占卜了一卦，请大师帮我详细解析。
-1. **起卦时间**：${d.lunar}
-2. **占问事项**：${d.qs}
-3. **卦象信息**：
-   - **主卦**：${document.getElementById('fullname-zhu').innerText} (体:${d.tiW}[${d.seasonState}], 用:${d.yongW})
-   - **互卦**：${document.getElementById('fullname-hu').innerText}
-   - **变卦**：${document.getElementById('fullname-bian').innerText}
-   - **动爻**：${d.res.mv}爻动
-4. **生克关系**：
-   - 开始：${d.rels[0].t}
-   - 过程：${d.rels[1].t}
-   - 结果：${d.rels[2].t}
-
-请结合五行旺衰、体用生克、卦象含义，给我一篇详细的断语。`;
-            
-            navigator.clipboard.writeText(prompt).then(() => {
-                alert("已复制详细提示词！\n请粘贴给 ChatGPT / DeepSeek / Claude。");
-            });
-        }
-
-        // --- 历史/配置/截图/小六壬 ---
-        function toggleColorMode() {
-            appState.colorMode = (appState.colorMode === 'gold') ? 'wuxing' : 'gold';
-            localStorage.setItem('qy_color_mode', appState.colorMode);
-            updateColorBtnText();
-        }
-        function updateColorBtnText() {
-            document.getElementById('color-mode-text').innerText = (appState.colorMode === 'gold') ? '默认' : '五行';
-        }
-        function saveHistory(nums, qs) {
+        function saveHistory(item) {
             let hist = JSON.parse(localStorage.getItem('qy_history') || '[]');
-            hist.unshift({ t: Date.now(), n: nums, q: qs });
-            if (hist.length > 50) hist.pop();
+            const idx = hist.findIndex(h => h.t === item.t);
+            if (idx >= 0) hist[idx] = item; else { hist.unshift(item); if (hist.length > 50) hist.pop(); }
             localStorage.setItem('qy_history', JSON.stringify(hist));
         }
+
+        function updateCurrentRecord() {
+            if (!appState.currentRecordId || !appState.currentNums) return;
+            saveHistory({ t: appState.currentRecordId, n: appState.currentNums, q: document.getElementById('res-question').value, fb: document.getElementById('res-feedback').value });
+            const btn = document.getElementById('btn-update-record'); const originalText = btn.innerHTML;
+            btn.innerHTML = `<span class="text-[#a7f3d0]">✅ 已保存</span>`; setTimeout(() => { btn.innerHTML = originalText; }, 1500);
+        }
+
         function renderHistory() {
             const hist = JSON.parse(localStorage.getItem('qy_history') || '[]');
-            const con = document.getElementById('history-list');
-            con.innerHTML = '';
+            const con = document.getElementById('history-list'); con.innerHTML = '';
             if (hist.length === 0) { con.innerHTML = '<div class="text-center text-gray-600 text-xs py-4">暂无记录</div>'; return; }
             hist.forEach((h, index) => {
                 const d = new Date(h.t);
@@ -626,7 +541,8 @@
                 itemDiv.className = "group relative p-3 border border-[#222] hover:border-[#d4af37] rounded bg-[#111] transition-colors flex justify-between items-center";
                 const contentDiv = document.createElement('div');
                 contentDiv.className = "flex-1 cursor-pointer";
-                contentDiv.onclick = () => loadHistoryItem(h.n, h.q);
+                // 传入 h.t 作为 existingTime
+                contentDiv.onclick = () => loadHistoryItem(h.n, h.q, h.t, h.fb || "");
                 contentDiv.innerHTML = `<div class="flex justify-between text-[#8a7018] text-[10px] mb-1 pr-2"><span>${dateStr}</span><span>[${h.n.join(',')}]</span></div><div class="text-gray-300 text-sm truncate pr-2">${h.q}</div>`;
                 const delBtn = document.createElement('div');
                 delBtn.className = "text-gray-600 hover:text-red-500 cursor-pointer px-2 text-lg md:opacity-0 md:group-hover:opacity-100 transition-opacity"; 
@@ -635,61 +551,56 @@
                 itemDiv.appendChild(contentDiv); itemDiv.appendChild(delBtn); con.appendChild(itemDiv);
             });
         }
+
         function deleteHistoryItem(index) {
-            if(confirm('删除此条记录？')) {
-                let hist = JSON.parse(localStorage.getItem('qy_history') || '[]');
-                hist.splice(index, 1); localStorage.setItem('qy_history', JSON.stringify(hist)); renderHistory();
-            }
+            if(confirm('删除此条记录？')) { let hist = JSON.parse(localStorage.getItem('qy_history') || '[]'); hist.splice(index, 1); localStorage.setItem('qy_history', JSON.stringify(hist)); renderHistory(); }
         }
-        function loadHistoryItem(nums, qs) {
+
+        function loadHistoryItem(nums, qs, id, fb) {
             setMode('number'); document.getElementById('n1').value = nums[0]; document.getElementById('n2').value = nums[1]; document.getElementById('n3').value = nums[2];
-            document.getElementById('inp-question').value = qs; toggleTool('history'); divine(false);
+            document.getElementById('inp-question').value = qs; toggleTool('history'); 
+            // 关键修正：传入 id 作为时间戳
+            divine(false, id, fb, id);
         }
-        function clearHistory() {
-            if(confirm('确定清空所有记录吗？')) { localStorage.removeItem('qy_history'); renderHistory(); }
+
+        function clearHistory() { if(confirm('确定清空所有记录吗？')) { localStorage.removeItem('qy_history'); renderHistory(); } }
+        function markUnsaved() {}
+
+        function copyToAI() {
+            const d = window.lastAiData; if(!d) return;
+            const prompt = `我用梅花易数占卜了一卦，请大师帮我详细解析。
+1. **起卦时间**：${document.getElementById('res-lunar').innerText}
+2. **占问事项**：${d.qs}
+3. **数字**：${document.getElementById('res-nums').innerText}
+4. **卦象信息**：
+   - **主卦**：${document.getElementById('fullname-zhu').innerText} (体:${d.tiW}[${d.seasonState}], 用:${d.yongW})
+   - **互卦**：${document.getElementById('fullname-hu').innerText}
+   - **变卦**：${document.getElementById('fullname-bian').innerText}
+   - **动爻**：${d.res.mv}爻动
+5. **生克关系**：
+   - 开始：${d.rels[0].t}
+   - 过程：${d.rels[1].t}
+   - 结果：${d.rels[2].t}
+6. **用户反馈/笔记**：${document.getElementById('res-feedback').value}
+
+请结合五行旺衰、体用生克、卦象含义，给我一篇详细的断语。`;
+            navigator.clipboard.writeText(prompt).then(() => { alert("已复制详细提示词！\n请粘贴给 ChatGPT / DeepSeek / Claude。"); });
         }
-        function setMode(m) {
-            appState.mode = m;
-            ['time', 'number', 'random'].forEach(x => {
-                document.getElementById('btn-mode-' + x).classList.toggle('text-[#d4af37]', x === m);
-                document.getElementById('input-group-' + x).classList.toggle('hidden', x !== m);
-            });
-        }
-        function resetApp() {
-            document.getElementById('scene-result').classList.add('hidden');
-            document.getElementById('scene-input').classList.remove('hidden');
-            document.getElementById('inp-question').value = '';
-            document.getElementById('main-header').style.opacity = '1';
-            document.getElementById('n1').value = ''; document.getElementById('n2').value = ''; document.getElementById('n3').value = '';
-        }
-        function toggleTool(id) {
-            const el = document.getElementById('modal-' + id);
-            el.classList.toggle('hidden');
-            if (id === 'history' && !el.classList.contains('hidden')) renderHistory();
-        }
+
         function capture() {
-            if (appState.lastResult && !appState.lastResult.saved) {
-                saveHistory(appState.lastResult.nums, appState.lastResult.qs); appState.lastResult.saved = true;
-            }
-            const target = document.getElementById('capture-area');
-            const originalBtnText = event.target.innerHTML;
-            event.target.innerText = "生成中...";
-            html2canvas(target, {
-                backgroundColor: "#050505", scale: 2, useCORS: true,
-                onclone: (clonedDoc) => {
+            updateCurrentRecord(); const target = document.getElementById('capture-area'); const originalBtnText = event.target.innerHTML; event.target.innerText = "生成中...";
+            html2canvas(target, { backgroundColor: "#050505", scale: 2, useCORS: true, onclone: (clonedDoc) => {
                     const analysisCol = clonedDoc.getElementById('analysis-col'); if (analysisCol) analysisCol.style.display = 'none';
-                    const visualCol = clonedDoc.getElementById('visual-col');
-                    if (visualCol) { visualCol.style.borderRight = 'none'; visualCol.style.paddingRight = '0'; visualCol.style.paddingBottom = '0'; }
-                    const gridContainer = visualCol.parentElement;
-                    if (gridContainer) { gridContainer.classList.remove('md:grid-cols-2'); gridContainer.classList.add('flex', 'justify-center'); }
+                    const visualCol = clonedDoc.getElementById('visual-col'); if (visualCol) { visualCol.style.borderRight = 'none'; visualCol.style.paddingRight = '0'; visualCol.style.paddingBottom = '0'; }
+                    const gridContainer = visualCol.parentElement; if (gridContainer) { gridContainer.classList.remove('md:grid-cols-2'); gridContainer.classList.add('flex', 'justify-center'); }
+                    const qInput = clonedDoc.getElementById('res-question'); const qDiv = clonedDoc.createElement('div'); qDiv.className = "text-gray-300 text-base font-serif italic text-center"; qDiv.innerText = document.getElementById('res-question').value; qInput.parentNode.replaceChild(qDiv, qInput);
+                    const fbInput = clonedDoc.getElementById('res-feedback'); const fbDiv = clonedDoc.createElement('div'); fbDiv.className = "text-gray-500 text-xs mt-2 border-t border-[#222] pt-2 whitespace-pre-wrap text-left"; fbDiv.innerText = document.getElementById('res-feedback').value ? "📝 " + document.getElementById('res-feedback').value : ""; fbInput.parentNode.replaceChild(fbDiv, fbInput);
                 }
-            }).then(canvas => {
-                const link = document.createElement('a'); link.download = `乾元易卦_${new Date().getTime()}.png`; link.href = canvas.toDataURL("image/png"); link.click(); event.target.innerHTML = originalBtnText;
-            });
+            }).then(canvas => { const link = document.createElement('a'); link.download = `乾元易卦_${new Date().getTime()}.png`; link.href = canvas.toDataURL("image/png"); link.click(); event.target.innerHTML = originalBtnText; });
         }
+
         function calcXLR() {
-            let n1=+document.getElementById('xlr1').value, n2=+document.getElementById('xlr2').value, n3=+document.getElementById('xlr3').value;
-            if(!n1) return;
+            let n1=+document.getElementById('xlr1').value, n2=+document.getElementById('xlr2').value, n3=+document.getElementById('xlr3').value; if(!n1) return;
             const XLR_MAP = [{t:"大安·木", c:"text-[#4ade80]"}, {t:"留连·土", c:"text-[#d97706]"}, {t:"速喜·火", c:"text-[#f87171]"}, {t:"赤口·金", c:"text-[#d4af37]"}, {t:"小吉·水", c:"text-[#60a5fa]"}, {t:"空亡·土", c:"text-[#d97706]"}];
             let i1 = (n1-1)%6; if(i1<0)i1+=6; let i2 = (i1+n2-1)%6; if(i2<0)i2+=6; let i3 = (i2+n3-1)%6; if(i3<0)i3+=6;
             document.getElementById('xlr-res').classList.remove('hidden');
@@ -704,8 +615,7 @@
             toggleTool('xiaoliuren'); divine();
         }
         function loadCase(idx) {
-            const c = caseDB[idx];
-            document.getElementById('case-content').classList.remove('hidden');
+            const c = caseDB[idx]; document.getElementById('case-content').classList.remove('hidden');
             document.getElementById('c-time').innerText = c.t; document.getElementById('c-qs').innerText = c.q; document.getElementById('c-fk').innerText = c.f;
             document.getElementById('case-content').dataset.g = JSON.stringify(c.g);
         }
@@ -714,8 +624,19 @@
             setMode('number'); toggleTool('cases');
             document.getElementById('n1').value = g[0]; document.getElementById('n2').value = g[1]; document.getElementById('n3').value = g[2];
             document.getElementById('inp-question').value = document.getElementById('c-qs').innerText;
-            divine(false);
+            // 案例不自动存，但可手动存
+            divine(false, null, document.getElementById('c-fk').innerText);
         }
+        function toggleTool(id) { const el = document.getElementById('modal-' + id); el.classList.toggle('hidden'); if (id === 'history' && !el.classList.contains('hidden')) renderHistory(); }
+        function setMode(m) { appState.mode = m; ['time', 'number', 'random'].forEach(x => { document.getElementById('btn-mode-' + x).classList.toggle('text-[#d4af37]', x === m); document.getElementById('input-group-' + x).classList.toggle('hidden', x !== m); }); }
+        function resetApp() {
+            document.getElementById('scene-result').classList.add('hidden'); document.getElementById('scene-input').classList.remove('hidden');
+            document.getElementById('inp-question').value = ''; document.getElementById('main-header').style.opacity = '1';
+            document.getElementById('n1').value = ''; document.getElementById('n2').value = ''; document.getElementById('n3').value = '';
+            appState.currentRecordId = null;
+        }
+        function toggleColorMode() { appState.colorMode = (appState.colorMode === 'gold') ? 'wuxing' : 'gold'; localStorage.setItem('qy_color_mode', appState.colorMode); updateColorBtnText(); }
+        function updateColorBtnText() { document.getElementById('color-mode-text').innerText = (appState.colorMode === 'gold') ? '默认' : '五行'; }
     </script>
 </body>
 </html>
